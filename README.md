@@ -12,21 +12,17 @@ An executable `bun` script that sets up a fresh DigitalOcean droplet (Ubuntu LTS
 
 - `apt update && apt full-upgrade`
 - Timezone `America/Los_Angeles`, locale `en_US.UTF-8`
-- zram swap (compressed swap in RAM) so small droplets don't run out of memory compiling Rust, without the disk wear of a swap file
-  - `/etc/systemd/zram-generator.conf`: `zram-size = ram`, `compression-algorithm = zstd`
-  - `vm.swappiness = 180` (the kernel should prefer zram over dropping file cache)
 
 **User & security**
 
-- Create a non-root, passwordless, sudo user named `scott`
+- Create a non-root, passwordless, sudo user named `scott` (`adduser --disabled-password`, so key-based SSH only; `NOPASSWD` rule in `/etc/sudoers.d/scott`)
 - Copy root's `authorized_keys` to the new user
 
 **`apt` packages**
 
-- Build toolchain: `build-essential`, `pkg-config`, `libssl-dev`, `cmake`, `clang`, `lld`
+- Build toolchain: `build-essential`, `pkg-config`, `libssl-dev`, `cmake`, `clang`
 - Core utilities: `git`, `curl`, `wget`, `unzip`, `zsh`
 - Homebrew prerequisites: `procps`, `file`
-- Swap: `systemd-zram-generator`
 - Security: `unattended-upgrades`
 
 Build dependencies stay on `apt` (never Homebrew) so Rust crates with C code link against the system libraries.
@@ -42,19 +38,21 @@ Build dependencies stay on `apt` (never Homebrew) so Rust crates with C code lin
 
 - `rustup` with the stable toolchain
 - Components: `rustfmt`, `clippy`, `rust-analyzer`, `rust-src`
-- `~/.cargo/config.toml`: link with `mold`, use `sccache` as `rustc-wrapper`
+- `~/.cargo/config.toml`: use `sccache` as `rustc-wrapper`
+- Linking uses Rust's default (the bundled `rust-lld` since Rust 1.90), no custom linker
 
 **Homebrew** (installed to `/home/linuxbrew/.linuxbrew`, packages installed via `brew bundle` with a Brewfile)
 
 - Editor and terminal: `neovim`, `herdr`
 - CLI tools: `ripgrep`, `fd`, `bat`, `eza`, `zoxide`, `fzf`, `gh`, `bun`, `jq`, `htop`
-- Rust build helpers: `mold`, `sccache`
+- Rust build helpers: `sccache`
 - Cargo tools: `cargo-nextest`, `bacon`, `cargo-watch`, `cargo-edit`, `cargo-audit`, `cargo-outdated`, `cargo-expand`
-  - Any that turn out not to be in Homebrew get installed with `cargo install` instead
+  - All of these are in `homebrew/core`; any that ever drop out get installed with `cargo install` instead
+- The Brewfile is written to `~/.Brewfile`
 
 **Config**
 
-- `.zshrc`: `brew shellenv`, cargo env, `zoxide` init
+- `.zshrc`: `brew shellenv`, cargo env, `zoxide` init, in a `# >>> drop >>>` block after oh-my-zsh's template
 - Git config: name=`sleb`, email=`scott.g.lebaron@gmail.com`, default branch=`main`
 - `neovim` config: clone `sleb/kickstart` into `~/.config/nvim`
 
@@ -66,6 +64,8 @@ Build dependencies stay on `apt` (never Homebrew) so Rust crates with C code lin
 - Idempotent: every step checks whether it's already done, so re-running is safe
 - `--dry-run` prints the commands without running them
 - Clear per-step logging with timing
+- After a step runs, its check runs again, so a command that exits 0 without doing its job fails right away
+- Fails fast: the first failing step stops the run with a non-zero exit. Fix it and re-run.
 - No optional extras or flags beyond `--dry-run`. "Do or do not..."
 
 ### User data
@@ -86,5 +86,13 @@ Paste it into the droplet's "User data" field, or pass it with `doctl compute dr
 
 ```bash
 bun install
-bun run index.ts
+bun run index.ts --dry-run   # print every command; nothing runs
+bun test
+bun build --compile --target=bun-linux-x64 index.ts --outfile drop-linux-x64
 ```
+
+- `index.ts`: argument parsing and the root/Linux guard
+- `src/config.ts`: everything installed or written, including the embedded files
+- `src/steps.ts`: the steps, each with a `done` check and a `run` action
+- `src/ctx.ts`: the one place commands run and files are written, with dry-run and live versions
+- `src/provision.ts`: runs the steps with logging and timing
