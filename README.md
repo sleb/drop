@@ -12,6 +12,7 @@ An executable `bun` script that sets up a fresh DigitalOcean droplet (Ubuntu LTS
 
 - `apt update && apt full-upgrade`
 - Timezone `America/Los_Angeles`, locale `en_US.UTF-8`
+- Last step: if the upgrade left `/var/run/reboot-required`, schedule a reboot one minute out (`shutdown -r +1`), so the script and cloud-init finish first
 
 **User & security**
 

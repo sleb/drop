@@ -278,4 +278,21 @@ export const userSteps: Step[] = [
   },
 ];
 
-export const steps: Step[] = [...rootSteps, ...userSteps];
+// Last, so everything else is in place before the new kernel boots.
+const rebootStep: Step = {
+  name: "Reboot if upgrades need it",
+  async done(ctx) {
+    return ctx.ok([
+      "sh",
+      "-c",
+      "test ! -e /var/run/reboot-required || test -e /run/systemd/shutdown/scheduled",
+    ]);
+  },
+  async run(ctx) {
+    // Scheduled rather than immediate so drop and cloud-init exit cleanly
+    // first; otherwise cloud-init would run the user data again after boot.
+    await ctx.run(["shutdown", "-r", "+1", "drop: rebooting to finish upgrades"]);
+  },
+};
+
+export const steps: Step[] = [...rootSteps, ...userSteps, rebootStep];
