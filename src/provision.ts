@@ -3,7 +3,7 @@ import type { Step } from "./steps.ts";
 
 const seconds = (since: number) => `${((performance.now() - since) / 1000).toFixed(1)}s`;
 
-export async function provision(ctx: Ctx, steps: Step[]): Promise<void> {
+export const provision = async (ctx: Ctx, steps: Step[]): Promise<void> => {
   const start = performance.now();
   for (const [i, step] of steps.entries()) {
     const t = performance.now();
@@ -25,4 +25,4 @@ export async function provision(ctx: Ctx, steps: Step[]): Promise<void> {
     ctx.log(`    ok (${seconds(t)})`);
   }
   ctx.log(`==> Finished ${steps.length} steps in ${seconds(start)}`);
-}
+};

@@ -11,9 +11,9 @@ export interface Step {
 
 // Homebrew refuses to run as root, so the user phase runs through sudo with a
 // login shell and the user's own HOME.
-export function asUser(script: string): Cmd {
+export const asUser = (script: string): Cmd => {
   return ["sudo", "-u", c.USER, "-H", "bash", "-lc", `cd ~ && ${script}`];
-}
+};
 
 const APT: Cmd = [
   "apt-get",
@@ -31,12 +31,12 @@ const BREW_ENV = `eval "$(${c.BREW} shellenv)"`;
 
 const exists = (path: string): Cmd => ["test", "-e", path];
 
-async function fileIs(ctx: Ctx, path: string, content: string) {
+const fileIs = async (ctx: Ctx, path: string, content: string) => {
   return (await ctx.read(path)) === content;
-}
+};
 
 // Parses `dpkg-query -W -f='${Package} ${db:Status-Status}\n'` output.
-export function missingPackages(wanted: string[], dpkgOutput: string): string[] {
+export const missingPackages = (wanted: string[], dpkgOutput: string): string[] => {
   const installed = new Set(
     dpkgOutput
       .split("\n")
@@ -45,17 +45,17 @@ export function missingPackages(wanted: string[], dpkgOutput: string): string[] 
       .map(([pkg]) => pkg),
   );
   return wanted.filter((pkg) => !installed.has(pkg));
-}
+};
 
 // Parses `rustup component list --installed`, whose lines look like
 // `clippy-x86_64-unknown-linux-gnu` or `rust-src`.
-export function missingComponents(wanted: string[], rustupOutput: string): string[] {
+export const missingComponents = (wanted: string[], rustupOutput: string): string[] => {
   const lines = rustupOutput.split("\n").map((l) => l.trim());
   return wanted.filter((comp) => !lines.some((l) => l === comp || l.startsWith(`${comp}-x86_64`)));
-}
+};
 
 // Replaces the marked block in a shell rc file, or appends it if absent.
-export function upsertBlock(existing: string, block: string): string {
+export const upsertBlock = (existing: string, block: string): string => {
   const [start, end] = [block.split("\n")[0]!, block.trimEnd().split("\n").at(-1)!];
   const i = existing.indexOf(start);
   const j = existing.indexOf(end, i);
@@ -64,9 +64,9 @@ export function upsertBlock(existing: string, block: string): string {
   }
   const sep = existing === "" || existing.endsWith("\n") ? "" : "\n";
   return `${existing}${sep}${existing ? "\n" : ""}${block}`;
-}
+};
 
-async function aptStatus(ctx: Ctx) {
+const aptStatus = async (ctx: Ctx) => {
   const out = await ctx.output([
     "dpkg-query",
     "-W",
@@ -74,7 +74,7 @@ async function aptStatus(ctx: Ctx) {
     ...c.APT_PACKAGES,
   ]);
   return missingPackages(c.APT_PACKAGES, out);
-}
+};
 
 export const rootSteps: Step[] = [
   {

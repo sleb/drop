@@ -23,23 +23,23 @@ export interface Ctx {
 
 const SAFE = /^[\w@%+=:,./-]+$/;
 
-export function quote(arg: string): string {
+export const quote = (arg: string): string => {
   return SAFE.test(arg) ? arg : `'${arg.replaceAll("'", `'\\''`)}'`;
-}
+};
 
-export function format(cmd: Cmd): string {
+export const format = (cmd: Cmd): string => {
   return cmd.map(quote).join(" ");
-}
+};
 
-function describeWrite(path: string, opts: WriteOpts): string {
+const describeWrite = (path: string, opts: WriteOpts): string => {
   const attrs = [
     opts.mode !== undefined ? `mode ${opts.mode.toString(8)}` : null,
     opts.owner ? `owner ${opts.owner}` : null,
   ].filter(Boolean);
   return attrs.length ? `write ${path} (${attrs.join(", ")})` : `write ${path}`;
-}
+};
 
-export function dryCtx(log: (line: string) => void = console.log): Ctx {
+export const dryCtx = (log: (line: string) => void = console.log): Ctx => {
   return {
     dryRun: true,
     log,
@@ -60,9 +60,9 @@ export function dryCtx(log: (line: string) => void = console.log): Ctx {
       for (const line of content.trimEnd().split("\n")) log(`    | ${line}`);
     },
   };
-}
+};
 
-export function liveCtx(log: (line: string) => void = console.log): Ctx {
+export const liveCtx = (log: (line: string) => void = console.log): Ctx => {
   return {
     dryRun: false,
     log,
@@ -89,4 +89,4 @@ export function liveCtx(log: (line: string) => void = console.log): Ctx {
       if (opts.owner) await $`chown ${`${opts.owner}:${opts.owner}`} ${path}`;
     },
   };
-}
+};
