@@ -5,7 +5,8 @@
   "private": true,
   "scripts": {
     "check": "biome check .",
-    "fix": "biome check --write ."
+    "fix": "biome check --write .",
+    "fmt": "biome format --write ."
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.14",
