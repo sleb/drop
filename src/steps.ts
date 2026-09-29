@@ -78,6 +78,46 @@ async function aptStatus(ctx: Ctx) {
 
 export const rootSteps: Step[] = [
   {
+    name: `Create user ${c.USER}`,
+    async done(ctx) {
+      return ctx.ok(["id", "-u", c.USER]);
+    },
+    // First, with its sudo rule and SSH keys, so scott can log in while the
+    // slow steps below are still running.
+    async run(ctx) {
+      // No password; SSH keys and the NOPASSWD sudoers rule are the only way in.
+      await ctx.run(["adduser", "--disabled-password", "--comment", "", c.USER]);
+    },
+  },
+  {
+    name: `Grant ${c.USER} passwordless sudo`,
+    async done(ctx) {
+      return fileIs(ctx, c.SUDOERS_PATH, c.SUDOERS);
+    },
+    async run(ctx) {
+      await ctx.write(c.SUDOERS_PATH, c.SUDOERS, { mode: 0o440 });
+      await ctx.run(["visudo", "--check", "--file", c.SUDOERS_PATH]);
+    },
+  },
+  {
+    name: `Copy root's authorized_keys to ${c.USER}`,
+    async done(ctx) {
+      return ctx.ok(["cmp", "-s", "/root/.ssh/authorized_keys", `${c.HOME}/.ssh/authorized_keys`]);
+    },
+    async run(ctx) {
+      const owner = ["-o", c.USER, "-g", c.USER];
+      await ctx.run(["install", "-d", "-m", "700", ...owner, `${c.HOME}/.ssh`]);
+      await ctx.run([
+        "install",
+        "-m",
+        "600",
+        ...owner,
+        "/root/.ssh/authorized_keys",
+        `${c.HOME}/.ssh/authorized_keys`,
+      ]);
+    },
+  },
+  {
     name: "Upgrade system packages",
     async run(ctx) {
       await ctx.run([...APT, "update"]);
@@ -115,41 +155,14 @@ export const rootSteps: Step[] = [
     },
   },
   {
-    name: `Create user ${c.USER}`,
+    name: "Install Ghostty terminfo",
     async done(ctx) {
-      return ctx.ok(["id", "-u", c.USER]);
+      return ctx.ok(["infocmp", "-x", "xterm-ghostty"]);
     },
     async run(ctx) {
-      // No password; SSH keys and the NOPASSWD sudoers rule are the only way in.
-      await ctx.run(["adduser", "--disabled-password", "--comment", "", c.USER]);
-    },
-  },
-  {
-    name: `Grant ${c.USER} passwordless sudo`,
-    async done(ctx) {
-      return fileIs(ctx, c.SUDOERS_PATH, c.SUDOERS);
-    },
-    async run(ctx) {
-      await ctx.write(c.SUDOERS_PATH, c.SUDOERS, { mode: 0o440 });
-      await ctx.run(["visudo", "--check", "--file", c.SUDOERS_PATH]);
-    },
-  },
-  {
-    name: `Copy root's authorized_keys to ${c.USER}`,
-    async done(ctx) {
-      return ctx.ok(["cmp", "-s", "/root/.ssh/authorized_keys", `${c.HOME}/.ssh/authorized_keys`]);
-    },
-    async run(ctx) {
-      const owner = ["-o", c.USER, "-g", c.USER];
-      await ctx.run(["install", "-d", "-m", "700", ...owner, `${c.HOME}/.ssh`]);
-      await ctx.run([
-        "install",
-        "-m",
-        "600",
-        ...owner,
-        "/root/.ssh/authorized_keys",
-        `${c.HOME}/.ssh/authorized_keys`,
-      ]);
+      await ctx.write(c.GHOSTTY_TERMINFO_PATH, c.GHOSTTY_TERMINFO);
+      await ctx.run(["tic", "-x", c.GHOSTTY_TERMINFO_PATH]);
+      await ctx.run(["rm", c.GHOSTTY_TERMINFO_PATH]);
     },
   },
   {

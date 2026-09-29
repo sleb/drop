@@ -1,6 +1,9 @@
 // Everything the script installs or writes. Embedded here because the compiled
 // binary is self-contained and can't read files next to it at runtime.
 
+// `infocmp -x xterm-ghostty` from Ghostty on macOS; bundled into the binary.
+import ghosttyTerminfo from "./xterm-ghostty.txt";
+
 export const USER = "scott";
 export const HOME = `/home/${USER}`;
 export const TIMEZONE = "America/Los_Angeles";
@@ -32,6 +35,9 @@ export const APT_PACKAGES = [
 ];
 
 export const RUST_COMPONENTS = ["rustfmt", "clippy", "rust-analyzer", "rust-src"];
+
+export const GHOSTTY_TERMINFO = ghosttyTerminfo;
+export const GHOSTTY_TERMINFO_PATH = "/tmp/xterm-ghostty.terminfo";
 
 export const SUDOERS_PATH = `/etc/sudoers.d/${USER}`;
 export const SUDOERS = `${USER} ALL=(ALL) NOPASSWD:ALL

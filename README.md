@@ -12,9 +12,10 @@ An executable `bun` script that sets up a fresh DigitalOcean droplet (Ubuntu LTS
 
 - `apt update && apt full-upgrade`
 - Timezone `America/Los_Angeles`, locale `en_US.UTF-8`
+- Ghostty's terminfo (`xterm-ghostty`), compiled with `tic -x` from a copy embedded in the binary (`infocmp -x xterm-ghostty` on macOS). Ubuntu only ships it in the `ghostty` GUI package.
 - Last step: if the upgrade left `/var/run/reboot-required`, schedule a reboot one minute out (`shutdown -r +1`), so the script and cloud-init finish first
 
-**User & security**
+**User & security** (first, before the upgrade, so `scott` can SSH in within seconds of boot while the rest runs)
 
 - Create a non-root, passwordless, sudo user named `scott` (`adduser --disabled-password`, so key-based SSH only; `NOPASSWD` rule in `/etc/sudoers.d/scott`)
 - Copy root's `authorized_keys` to the new user
