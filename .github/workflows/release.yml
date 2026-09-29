@@ -1,0 +1,32 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+
+      - run: bun install --frozen-lockfile
+
+      - run: bun run check
+
+      - run: bunx tsc --noEmit
+
+      - run: bun test
+
+      - run: bun build --compile --target=bun-linux-x64 index.ts --outfile drop-linux-x64
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" drop-linux-x64 --title "$GITHUB_REF_NAME" --generate-notes --verify-tag
