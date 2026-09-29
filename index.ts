@@ -16,16 +16,13 @@ if (args.some((a) => a !== "--dry-run")) fail(USAGE);
 const dryRun = args.includes("--dry-run");
 
 if (!dryRun) {
-  if (process.platform !== "linux")
-    fail("only runs on Linux (use --dry-run to preview)");
+  if (process.platform !== "linux") fail("only runs on Linux (use --dry-run to preview)");
   if (process.getuid?.() !== 0) fail("must run as root");
   // cloud-init runs user data with a minimal environment and no TTY.
   $.env({
     ...process.env,
     HOME: process.env.HOME ?? "/root",
-    PATH:
-      process.env.PATH ??
-      "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    PATH: process.env.PATH ?? "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
     DEBIAN_FRONTEND: "noninteractive",
     NEEDRESTART_MODE: "a",
   });

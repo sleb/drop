@@ -1,5 +1,5 @@
-import { $ } from "bun";
 import { chmod } from "node:fs/promises";
+import { $ } from "bun";
 
 export type Cmd = string[];
 

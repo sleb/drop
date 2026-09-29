@@ -5,7 +5,9 @@ import { provision } from "./provision.ts";
 import { missingComponents, missingPackages, steps, upsertBlock } from "./steps.ts";
 
 test("format quotes only args that need it", () => {
-  expect(format(["apt-get", "-o", "DPkg::Lock::Timeout=600"])).toBe("apt-get -o DPkg::Lock::Timeout=600");
+  expect(format(["apt-get", "-o", "DPkg::Lock::Timeout=600"])).toBe(
+    "apt-get -o DPkg::Lock::Timeout=600",
+  );
   expect(format(["bash", "-c", "echo 'hi' $HOME"])).toBe(`bash -c 'echo '\\''hi'\\'' $HOME'`);
 });
 
@@ -33,7 +35,10 @@ test("upsertBlock replaces an existing block and is stable", () => {
 
 test("dry run prints every step without executing anything", async () => {
   const lines: string[] = [];
-  await provision(dryCtx((l) => lines.push(l)), steps);
+  await provision(
+    dryCtx((l) => lines.push(l)),
+    steps,
+  );
   const output = lines.join("\n");
 
   for (const step of steps) expect(output).toContain(step.name);

@@ -3,7 +3,12 @@
   "module": "index.ts",
   "type": "module",
   "private": true,
+  "scripts": {
+    "check": "biome check .",
+    "fix": "biome check --write ."
+  },
   "devDependencies": {
+    "@biomejs/biome": "2.5.14",
     "@types/bun": "latest"
   },
   "peerDependencies": {

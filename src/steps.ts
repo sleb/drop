@@ -36,7 +36,10 @@ const fileIs = async (ctx: Ctx, path: string, content: string) => {
 };
 
 // Parses `dpkg-query -W -f='${Package} ${db:Status-Status}\n'` output.
-export const missingPackages = (wanted: string[], dpkgOutput: string): string[] => {
+export const missingPackages = (
+  wanted: string[],
+  dpkgOutput: string,
+): string[] => {
   const installed = new Set(
     dpkgOutput
       .split("\n")
@@ -49,18 +52,30 @@ export const missingPackages = (wanted: string[], dpkgOutput: string): string[] 
 
 // Parses `rustup component list --installed`, whose lines look like
 // `clippy-x86_64-unknown-linux-gnu` or `rust-src`.
-export const missingComponents = (wanted: string[], rustupOutput: string): string[] => {
+export const missingComponents = (
+  wanted: string[],
+  rustupOutput: string,
+): string[] => {
   const lines = rustupOutput.split("\n").map((l) => l.trim());
-  return wanted.filter((comp) => !lines.some((l) => l === comp || l.startsWith(`${comp}-x86_64`)));
+  return wanted.filter(
+    (comp) => !lines.some((l) => l === comp || l.startsWith(`${comp}-x86_64`)),
+  );
 };
 
 // Replaces the marked block in a shell rc file, or appends it if absent.
 export const upsertBlock = (existing: string, block: string): string => {
-  const [start, end] = [block.split("\n")[0]!, block.trimEnd().split("\n").at(-1)!];
+  const [start, end] = [
+    block.split("\n")[0]!,
+    block.trimEnd().split("\n").at(-1)!,
+  ];
   const i = existing.indexOf(start);
   const j = existing.indexOf(end, i);
   if (i !== -1 && j !== -1) {
-    return existing.slice(0, i) + block + existing.slice(j + end.length).replace(/^\n/, "");
+    return (
+      existing.slice(0, i) +
+      block +
+      existing.slice(j + end.length).replace(/^\n/, "")
+    );
   }
   const sep = existing === "" || existing.endsWith("\n") ? "" : "\n";
   return `${existing}${sep}${existing ? "\n" : ""}${block}`;
@@ -70,6 +85,7 @@ const aptStatus = async (ctx: Ctx) => {
   const out = await ctx.output([
     "dpkg-query",
     "-W",
+    // biome-ignore lint/suspicious/noTemplateCurlyInString: dpkg-query format fields, not a template.
     "-f=${Package} ${db:Status-Status}\\n",
     ...c.APT_PACKAGES,
   ]);
@@ -86,7 +102,13 @@ export const rootSteps: Step[] = [
     // slow steps below are still running.
     async run(ctx) {
       // No password; SSH keys and the NOPASSWD sudoers rule are the only way in.
-      await ctx.run(["adduser", "--disabled-password", "--comment", "", c.USER]);
+      await ctx.run([
+        "adduser",
+        "--disabled-password",
+        "--comment",
+        "",
+        c.USER,
+      ]);
     },
   },
   {
@@ -102,7 +124,12 @@ export const rootSteps: Step[] = [
   {
     name: `Copy root's authorized_keys to ${c.USER}`,
     async done(ctx) {
-      return ctx.ok(["cmp", "-s", "/root/.ssh/authorized_keys", `${c.HOME}/.ssh/authorized_keys`]);
+      return ctx.ok([
+        "cmp",
+        "-s",
+        "/root/.ssh/authorized_keys",
+        `${c.HOME}/.ssh/authorized_keys`,
+      ]);
     },
     async run(ctx) {
       const owner = ["-o", c.USER, "-g", c.USER];
@@ -136,7 +163,15 @@ export const rootSteps: Step[] = [
   {
     name: `Set timezone to ${c.TIMEZONE}`,
     async done(ctx) {
-      return (await ctx.output(["timedatectl", "show", "-p", "Timezone", "--value"])) === c.TIMEZONE;
+      return (
+        (await ctx.output([
+          "timedatectl",
+          "show",
+          "-p",
+          "Timezone",
+          "--value",
+        ])) === c.TIMEZONE
+      );
     },
     async run(ctx) {
       await ctx.run(["timedatectl", "set-timezone", c.TIMEZONE]);
@@ -147,7 +182,10 @@ export const rootSteps: Step[] = [
     async done(ctx) {
       const current = (await ctx.read("/etc/default/locale")) ?? "";
       const generated = await ctx.output(["locale", "-a"]);
-      return current.includes(`LANG=${c.LOCALE}`) && generated.split("\n").includes("en_US.utf8");
+      return (
+        current.includes(`LANG=${c.LOCALE}`) &&
+        generated.split("\n").includes("en_US.utf8")
+      );
     },
     async run(ctx) {
       await ctx.run(["locale-gen", c.LOCALE]);
@@ -207,13 +245,20 @@ export const userSteps: Step[] = [
   {
     name: "Install stable Rust toolchain and components",
     async done(ctx) {
-      const out = await ctx.output(asUser(`${c.RUSTUP} component list --installed --toolchain stable`));
+      const out = await ctx.output(
+        asUser(`${c.RUSTUP} component list --installed --toolchain stable`),
+      );
       return missingComponents(c.RUST_COMPONENTS, out).length === 0;
     },
     async run(ctx) {
-      const components = c.RUST_COMPONENTS.flatMap((comp) => ["--component", comp]);
+      const components = c.RUST_COMPONENTS.flatMap((comp) => [
+        "--component",
+        comp,
+      ]);
       await ctx.run(
-        asUser(`${c.RUSTUP} toolchain install stable --profile minimal ${components.join(" ")}`),
+        asUser(
+          `${c.RUSTUP} toolchain install stable --profile minimal ${components.join(" ")}`,
+        ),
       );
       await ctx.run(asUser(`${c.RUSTUP} default stable`));
     },
@@ -236,12 +281,19 @@ export const userSteps: Step[] = [
     async done(ctx) {
       return (
         (await fileIs(ctx, c.BREWFILE_PATH, c.BREWFILE)) &&
-        (await ctx.ok(asUser(`${BREW_ENV} && brew bundle check --file ${c.BREWFILE_PATH}`)))
+        (await ctx.ok(
+          asUser(`${BREW_ENV} && brew bundle check --file ${c.BREWFILE_PATH}`),
+        ))
       );
     },
     async run(ctx) {
-      await ctx.write(c.BREWFILE_PATH, c.BREWFILE, { mode: 0o644, owner: c.USER });
-      await ctx.run(asUser(`${BREW_ENV} && brew bundle install --file ${c.BREWFILE_PATH}`));
+      await ctx.write(c.BREWFILE_PATH, c.BREWFILE, {
+        mode: 0o644,
+        owner: c.USER,
+      });
+      await ctx.run(
+        asUser(`${BREW_ENV} && brew bundle install --file ${c.BREWFILE_PATH}`),
+      );
     },
   },
   {
@@ -250,7 +302,10 @@ export const userSteps: Step[] = [
       return fileIs(ctx, c.CARGO_CONFIG_PATH, c.CARGO_CONFIG);
     },
     async run(ctx) {
-      await ctx.write(c.CARGO_CONFIG_PATH, c.CARGO_CONFIG, { mode: 0o644, owner: c.USER });
+      await ctx.write(c.CARGO_CONFIG_PATH, c.CARGO_CONFIG, {
+        mode: 0o644,
+        owner: c.USER,
+      });
     },
   },
   {
@@ -270,7 +325,11 @@ export const userSteps: Step[] = [
     name: "Configure git",
     async done(ctx) {
       for (const [key, value] of Object.entries(c.GIT_CONFIG)) {
-        if ((await ctx.output(asUser(`git config --global --get ${key}`))) !== value) return false;
+        if (
+          (await ctx.output(asUser(`git config --global --get ${key}`))) !==
+          value
+        )
+          return false;
       }
       return true;
     },
@@ -304,7 +363,12 @@ const rebootStep: Step = {
   async run(ctx) {
     // Scheduled rather than immediate so drop and cloud-init exit cleanly
     // first; otherwise cloud-init would run the user data again after boot.
-    await ctx.run(["shutdown", "-r", "+1", "drop: rebooting to finish upgrades"]);
+    await ctx.run([
+      "shutdown",
+      "-r",
+      "+1",
+      "drop: rebooting to finish upgrades",
+    ]);
   },
 };
 

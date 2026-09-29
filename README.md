@@ -90,6 +90,7 @@ Paste it into the droplet's "User data" field, or pass it with `doctl compute dr
 bun install
 bun run index.ts --dry-run   # print every command; nothing runs
 bun test
+bun run check                # biome lint + format check; `bun run fix` applies fixes
 bun build --compile --target=bun-linux-x64 index.ts --outfile drop-linux-x64
 ```
 

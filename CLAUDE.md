@@ -9,6 +9,7 @@ The README is the source of truth for what the droplet setup installs and how th
 - Run locally (safe on macOS only with `--dry-run`): `bun run index.ts --dry-run`
 - Build the release binary: `bun build --compile --target=bun-linux-x64 index.ts --outfile drop-linux-x64`
 - Typecheck: `bunx tsc --noEmit`
+- Lint and format check: `bun run check`; apply fixes (formatting, import sorting, safe lint fixes): `bun run fix`
 - Test: `bun test`, single file `bun test path/to/file.test.ts`, single test `bun test -t "name pattern"`
 
 ## Runtime constraints
