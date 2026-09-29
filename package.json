@@ -14,5 +14,8 @@
   },
   "peerDependencies": {
     "typescript": "^7"
+  },
+  "dependencies": {
+    "@logtape/logtape": "^2.3.9"
   }
 }

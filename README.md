@@ -65,7 +65,7 @@ Build dependencies stay on `apt` (never Homebrew) so Rust crates with C code lin
 - Published as a GitHub Release asset on `sleb/drop`
 - Idempotent: every step checks whether it's already done, so re-running is safe
 - `--dry-run` prints the commands without running them
-- Clear per-step logging with timing
+- Clear per-step logging with timing, through [LogTape](https://logtape.org) with timestamped lines
 - After a step runs, its check runs again, so a command that exits 0 without doing its job fails right away
 - Fails fast: the first failing step stops the run with a non-zero exit. Fix it and re-run.
 - No optional extras or flags beyond `--dry-run`. "Do or do not..."
@@ -99,3 +99,4 @@ bun build --compile --target=bun-linux-x64 index.ts --outfile drop-linux-x64
 - `src/steps.ts`: the steps, each with a `done` check and a `run` action
 - `src/ctx.ts`: the one place commands run and files are written, with dry-run and live versions
 - `src/provision.ts`: runs the steps with logging and timing
+- `src/log.ts`: LogTape setup and the `drop` logger

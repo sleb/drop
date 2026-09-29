@@ -1,13 +1,16 @@
 #!/usr/bin/env bun
 import { $ } from "bun";
 import { dryCtx, liveCtx } from "./src/ctx.ts";
+import { logger, setupLogging } from "./src/log.ts";
 import { provision } from "./src/provision.ts";
 import { steps } from "./src/steps.ts";
+
+await setupLogging();
 
 const USAGE = "usage: drop [--dry-run]";
 
 const fail = (message: string): never => {
-  console.error(`drop: ${message}`);
+  logger.error`${message}`;
   process.exit(1);
 };
 

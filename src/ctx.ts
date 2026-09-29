@@ -1,5 +1,6 @@
 import { chmod } from "node:fs/promises";
 import { $ } from "bun";
+import { info } from "./log.ts";
 
 export type Cmd = string[];
 
@@ -39,7 +40,7 @@ const describeWrite = (path: string, opts: WriteOpts): string => {
   return attrs.length ? `write ${path} (${attrs.join(", ")})` : `write ${path}`;
 };
 
-export const dryCtx = (log: (line: string) => void = console.log): Ctx => {
+export const dryCtx = (log: (line: string) => void = info): Ctx => {
   return {
     dryRun: true,
     log,
@@ -62,7 +63,7 @@ export const dryCtx = (log: (line: string) => void = console.log): Ctx => {
   };
 };
 
-export const liveCtx = (log: (line: string) => void = console.log): Ctx => {
+export const liveCtx = (log: (line: string) => void = info): Ctx => {
   return {
     dryRun: false,
     log,
