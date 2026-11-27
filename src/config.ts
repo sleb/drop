@@ -17,19 +17,12 @@ export const RUSTUP = `${HOME}/.cargo/bin/rustup`;
 export const APT_PACKAGES = [
   // Build toolchain
   "build-essential",
-  "pkg-config",
-  "libssl-dev",
-  "cmake",
-  "clang",
   // Core utilities
   "git",
   "curl",
   "wget",
   "unzip",
   "zsh",
-  // Homebrew prerequisites
-  "procps",
-  "file",
   // Security
   "unattended-upgrades",
 ];
@@ -59,6 +52,8 @@ brew "gh"
 brew "bun"
 brew "jq"
 brew "htop"
+brew "node"
+brew "openjdk"
 
 # Rust build helpers
 brew "sccache"

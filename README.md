@@ -22,12 +22,11 @@ An executable `bun` script that sets up a fresh DigitalOcean droplet (Ubuntu LTS
 
 **`apt` packages**
 
-- Build toolchain: `build-essential`, `pkg-config`, `libssl-dev`, `cmake`, `clang`
+- Build toolchain: `build-essential`
 - Core utilities: `git`, `curl`, `wget`, `unzip`, `zsh`
-- Homebrew prerequisites: `procps`, `file`
 - Security: `unattended-upgrades`
 
-Build dependencies stay on `apt` (never Homebrew) so Rust crates with C code link against the system libraries.
+The C compiler stays on `apt` (never Homebrew) so Rust crates with C code link against the system libraries.
 
 #### 2. As `scott`
 
@@ -46,7 +45,7 @@ Build dependencies stay on `apt` (never Homebrew) so Rust crates with C code lin
 **Homebrew** (installed to `/home/linuxbrew/.linuxbrew`, packages installed via `brew bundle` with a Brewfile)
 
 - Editor and terminal: `neovim`, `herdr`
-- CLI tools: `ripgrep`, `fd`, `bat`, `eza`, `zoxide`, `fzf`, `gh`, `bun`, `jq`, `htop`
+- CLI tools: `ripgrep`, `fd`, `bat`, `eza`, `zoxide`, `fzf`, `gh`, `bun`, `jq`, `htop`, `node`, `openjdk`
 - Rust build helpers: `sccache`
 - Cargo tools: `cargo-nextest`, `bacon`, `cargo-watch`, `cargo-edit`, `cargo-audit`, `cargo-outdated`, `cargo-expand`
   - All of these are in `homebrew/core`; any that ever drop out get installed with `cargo install` instead
